@@ -4,3 +4,14 @@ tmp
 backup
 assets
 national-award-defense-2026.pptx
+
+# Generated presentations, previews, caches, and local office artifacts.
+*.pptx
+.DS_Store
+.build/
+exports/
+pptx-preview/
+svg-preview/
+scripts/__pycache__/
+*.gif
+*.pdf

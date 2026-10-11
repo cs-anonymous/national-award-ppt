@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1,1 L10,6 L1,11" fill="none" stroke="#7890A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1,1 L10,6 L1,11" fill="none" stroke="#1675C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif; }
+      .body { fill: #17263A; }
+      .muted { fill: #58708A; }
+      .blue { fill: #1675C8; }
+      .cyan { fill: #0E9DB4; }
+      .orange { fill: #E88932; }
+      .panel { fill: #F1F6FB; stroke: #C8DCEC; stroke-width: 2; }
+      .node { fill: #FFFFFF; stroke: #C8DCEC; stroke-width: 2; }
+      .connector { fill: none; stroke: #7890A8; stroke-width: 3; marker-end: url(#arrow); }
+      .feedback { fill: none; stroke: #1675C8; stroke-width: 3; stroke-dasharray: 9 8; marker-end: url(#arrow-blue); }
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="#FFFFFF"/>
+
+  <text x="64" y="86" class="blue" font-size="46" font-weight="700">项目流程</text>
+  <line x1="350" y1="42" x2="350" y2="98" stroke="#17263A" stroke-width="2"/>
+  <text x="382" y="82" class="body" font-size="40" font-weight="700">LER：大模型驱动的智能实体识别分类工具集</text>
+  <text x="64" y="140" class="muted" font-size="29">面向钢铁行业分类分级任务，串联样本与标准准备、模型分类、性能分析和迭代优化</text>
+  <text x="1872" y="1052" class="blue" font-size="27" font-weight="700" text-anchor="end">LER</text>
+
+  <rect x="48" y="184" width="1112" height="824" rx="16" class="panel"/>
+  <text x="80" y="234" class="blue" font-size="32" font-weight="700">从数据准备到持续优化的工作流</text>
+
+  <rect x="82" y="272" width="292" height="166" rx="10" class="node"/>
+  <text x="108" y="313" class="blue" font-size="28" font-weight="700">样本库 samplebase</text>
+  <text x="108" y="354" class="body" font-size="24">导入已标注样本表格</text>
+  <text x="108" y="389" class="muted" font-size="23">清洗、拆分并组织样本</text>
+  <text x="108" y="420" class="muted" font-size="22">输出：样本库文件与索引</text>
+
+  <rect x="408" y="272" width="292" height="166" rx="10" class="node"/>
+  <text x="434" y="313" class="cyan" font-size="28" font-weight="700">分类标准 category</text>
+  <text x="434" y="354" class="body" font-size="24">导入分类分级标准表</text>
+  <text x="434" y="389" class="muted" font-size="23">可附加需求文档与阈值</text>
+  <text x="434" y="420" class="muted" font-size="22">输出：标准 JSON</text>
+
+  <rect x="734" y="272" width="386" height="166" rx="10" fill="#FFF8EF" stroke="#F0C99E" stroke-width="2"/>
+  <text x="760" y="313" class="orange" font-size="28" font-weight="700">任务配置 project / task</text>
+  <text x="760" y="354" class="body" font-size="24">关联样本库与分类标准</text>
+  <text x="760" y="389" class="muted" font-size="23">设置模型、分类参数与检索策略</text>
+  <text x="760" y="420" class="muted" font-size="22">形成可复用的分类任务</text>
+
+  <path d="M374 355 H398" class="connector"/>
+  <path d="M700 355 H724" class="connector"/>
+  <path d="M927 438 V470" class="connector"/>
+
+  <rect x="82" y="478" width="1038" height="202" rx="10" fill="#FFFFFF" stroke="#C8DCEC" stroke-width="2"/>
+  <text x="108" y="520" class="blue" font-size="28" font-weight="700">分类执行：提示词、检索增强与模型调用</text>
+
+  <rect x="110" y="548" width="214" height="92" rx="8" fill="#EAF3FC" stroke="#AFCDE8" stroke-width="2"/>
+  <text x="217" y="585" class="blue" font-size="25" font-weight="700" text-anchor="middle">prompt</text>
+  <text x="217" y="618" class="body" font-size="21" text-anchor="middle">汇总样本、标准与任务</text>
+
+  <path d="M324 594 H358" class="connector"/>
+  <rect x="368" y="548" width="214" height="92" rx="8" fill="#E8F7F8" stroke="#A9DCDD" stroke-width="2"/>
+  <text x="475" y="585" class="cyan" font-size="25" font-weight="700" text-anchor="middle">RAG</text>
+  <text x="475" y="618" class="body" font-size="21" text-anchor="middle">按任务检索相关样例</text>
+
+  <path d="M582 594 H616" class="connector"/>
+  <rect x="626" y="548" width="214" height="92" rx="8" fill="#FFF5E9" stroke="#F0C99E" stroke-width="2"/>
+  <text x="733" y="585" class="orange" font-size="25" font-weight="700" text-anchor="middle">LLM</text>
+  <text x="733" y="618" class="body" font-size="21" text-anchor="middle">调用大模型完成分类</text>
+
+  <path d="M840 594 H874" class="connector"/>
+  <rect x="884" y="548" width="208" height="92" rx="8" fill="#F1F6FB" stroke="#C8DCEC" stroke-width="2"/>
+  <text x="988" y="585" class="blue" font-size="25" font-weight="700" text-anchor="middle">result</text>
+  <text x="988" y="618" class="body" font-size="21" text-anchor="middle">解析并保存分类结果</text>
+
+  <path d="M601 680 V715" class="connector"/>
+  <rect x="82" y="724" width="1038" height="222" rx="10" fill="#FFFFFF" stroke="#C8DCEC" stroke-width="2"/>
+  <text x="108" y="766" class="cyan" font-size="28" font-weight="700">评估、导出与迭代</text>
+
+  <rect x="110" y="794" width="218" height="96" rx="8" class="node"/>
+  <text x="219" y="832" class="blue" font-size="24" font-weight="700" text-anchor="middle">rate 性能评估</text>
+  <text x="219" y="865" class="muted" font-size="21" text-anchor="middle">对照标注样本分析</text>
+  <path d="M328 842 H370" class="connector"/>
+
+  <rect x="382" y="794" width="218" height="96" rx="8" class="node"/>
+  <text x="491" y="832" class="cyan" font-size="24" font-weight="700" text-anchor="middle">结果可视化</text>
+  <text x="491" y="865" class="muted" font-size="21" text-anchor="middle">性能与错误诊断</text>
+  <path d="M600 842 H642" class="connector"/>
+
+  <rect x="654" y="794" width="218" height="96" rx="8" class="node"/>
+  <text x="763" y="832" class="orange" font-size="24" font-weight="700" text-anchor="middle">结果导出</text>
+  <text x="763" y="865" class="muted" font-size="21" text-anchor="middle">分类结果与易错样本</text>
+  <path d="M872 842 H914" class="connector"/>
+
+  <rect x="926" y="794" width="166" height="96" rx="8" fill="#EAF3FC" stroke="#AFCDE8" stroke-width="2"/>
+  <text x="1009" y="832" class="blue" font-size="23" font-weight="700" text-anchor="middle">错误分析</text>
+  <text x="1009" y="865" class="muted" font-size="20" text-anchor="middle">补充样本再训练</text>
+  <path d="M1009 794 V700 H217 V650" class="feedback"/>
+  <rect x="690" y="677" width="272" height="32" rx="4" fill="#FFFFFF"/>
+  <text x="826" y="700" class="blue" font-size="20" text-anchor="middle">修订样本，进入下一轮分类</text>
+  <text x="108" y="925" class="muted" font-size="22">支持分类结果导出、易错数据筛选，以及基于准确率和采样策略的补充样本生成</text>
+
+  <rect x="1190" y="184" width="682" height="824" rx="16" class="panel"/>
+  <text x="1224" y="234" class="orange" font-size="32" font-weight="700">模块职责与数据组织</text>
+
+  <text x="1224" y="298" class="blue" font-size="27" font-weight="700">核心工具链</text>
+  <text x="1224" y="341" class="body" font-size="24">samplebase：样本库创建、导入与管理</text>
+  <text x="1224" y="380" class="body" font-size="24">category：分类分级标准处理与存储</text>
+  <text x="1224" y="419" class="body" font-size="24">prompt / rag：提示词构建与样例检索</text>
+  <text x="1224" y="458" class="body" font-size="24">llm / result：模型调用与结果解析</text>
+  <text x="1224" y="497" class="body" font-size="24">rate：性能评估、错误分析与结果导出</text>
+
+  <line x1="1224" y1="530" x2="1838" y2="530" stroke="#C8DCEC" stroke-width="2"/>
+  <text x="1224" y="578" class="cyan" font-size="27" font-weight="700">典型输入与输出</text>
+  <text x="1224" y="621" class="body" font-size="23">输入：样本表格、分类标准、待处理数据</text>
+  <text x="1224" y="659" class="body" font-size="23">过程：生成 prompt，检索样本并调用模型</text>
+  <text x="1224" y="697" class="body" font-size="23">输出：分类结果、性能报告与易错样本</text>
+  <text x="1224" y="735" class="muted" font-size="21">高层命令：ler classify &lt;input_file&gt;</text>
+
+  <line x1="1224" y1="768" x2="1838" y2="768" stroke="#C8DCEC" stroke-width="2"/>
+  <text x="1224" y="816" class="blue" font-size="27" font-weight="700">本地缓存目录</text>
+  <text x="1224" y="858" class="body" font-size="22" font-family="Consolas, monospace">~/.ler/</text>
+  <text x="1252" y="895" class="body" font-size="21" font-family="Consolas, monospace">config/   samplebase/   category/</text>
+  <text x="1252" y="930" class="body" font-size="21" font-family="Consolas, monospace">project/&lt;project&gt;/&lt;task&gt;/</text>
+  <text x="1224" y="975" class="muted" font-size="21">保存配置、样本、任务记录、模型输出与评估结果</text>
+</svg>

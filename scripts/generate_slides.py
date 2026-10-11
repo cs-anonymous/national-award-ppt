@@ -87,7 +87,8 @@ class Slide:
         self.text(title, divider + 30, 86, 40, INK, bold=True)
         if takeaway:
             self.text(takeaway, 130, 145, 32, MUTED, width=1690, leading=42)
-        self.parts.append(f'<text x="62" y="1034" font-family="{FONT}" font-size="32" fill="{MUTED}">北京航空航天大学计算机学院 · 2026 年研究生国家奖学金答辩</text>')
+        # Keep the lower-left footer area empty; the deck uses the right page
+        # number only so added chapter pages can share the same master cleanly.
         self.parts.append(f'<text x="1818" y="1034" text-anchor="end" font-family="{FONT}" font-size="32" fill="{BLUE}" font-weight="700">{number:02d}</text>')
 
         self.header_end = len(self.parts)

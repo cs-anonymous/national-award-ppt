@@ -7,7 +7,8 @@ const { execFileSync } = require('child_process');
 const PptxGenJS = require('pptxgenjs');
 
 const ROOT = path.resolve(__dirname, '..');
-const SVG_DIR = path.join(ROOT, 'svg');
+const ANT_WKG = process.argv.includes('--ant-wkg');
+const SVG_DIR = ANT_WKG ? path.join(ROOT, 'svg', 'ant-wkg') : path.join(ROOT, 'svg');
 const args = process.argv.slice(2);
 const slideFlag = args.find((arg) => arg.startsWith('--slide='));
 const onlySlide = slideFlag ? Number(slideFlag.split('=')[1]) : null;
@@ -18,6 +19,11 @@ const ORDER = [
   '05-overview.svg', '06-expath.svg', '07-ruledep.svg', '08-geneticprism.svg',
   '09-geneticflow.svg', 'back-inspire.svg', '10-practice.svg', '11-lab-work.svg',
   '12-conference.svg', '13-exchange.svg', '14-closing.svg',
+];
+const ANT_ORDER = [
+  '01-knowledge-data.svg', '02-itas-knowledge-construction.svg',
+  '03-materialbrain.svg', '04-ler-overview.svg',
+  '05-materagent.svg', '06-tools-and-evaluation.svg',
 ];
 const SW = 1920;
 const SH = 1080;
@@ -93,6 +99,43 @@ function textContent(node) {
   return node.children.map((c) => typeof c === 'string' ? c : textContent(c)).join('');
 }
 
+function collectStyles(root) {
+  const styles = {};
+  const walk = (node) => {
+    if (typeof node === 'string') return;
+    if (node.name === 'style') {
+      const css = textContent(node);
+      for (const rule of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+        const declarations = {};
+        for (const declaration of rule[2].split(';')) {
+          const [key, value] = declaration.split(':').map((v) => v && v.trim());
+          if (key && value) declarations[key] = value;
+        }
+        for (const selector of rule[1].split(',')) styles[selector.trim()] = { ...(styles[selector.trim()] || {}), ...declarations };
+      }
+    }
+    for (const child of node.children || []) walk(child);
+  };
+  walk(root);
+  return styles;
+}
+
+function resolveAttrs(node, styles) {
+  const resolved = {};
+  Object.assign(resolved, styles[node.name] || {});
+  for (const cls of (node.attrs.class || '').split(/\s+/).filter(Boolean)) {
+    Object.assign(resolved, styles[`.${cls}`] || {});
+  }
+  if (node.attrs.style) {
+    for (const declaration of node.attrs.style.split(';')) {
+      const [key, value] = declaration.split(':').map((v) => v && v.trim());
+      if (key && value) resolved[key] = value;
+    }
+  }
+  Object.assign(resolved, node.attrs);
+  return resolved;
+}
+
 function estimatedWidth(text, fontSize) {
   let units = 0;
   for (const char of text) units += /[\x00-\xff]/.test(char) ? 0.56 : 1;
@@ -129,16 +172,26 @@ function renderSvgPng(node, x, y, w, h, tempDir, index) {
 
 function addPath(slide, node, state) {
   const d = node.attrs.d || '';
-  const tokens = [...d.matchAll(/[ML]|[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/g)].map((x) => x[0]);
-  if (!tokens.length || tokens.some((t) => !/^[ML]$/.test(t) && !Number.isFinite(Number(t)))) return false;
+  const tokens = [...d.matchAll(/[MLHVZ]|[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/gi)].map((x) => x[0]);
+  if (!tokens.length || tokens.some((t) => !/^[MLHVZ]$/i.test(t) && !Number.isFinite(Number(t)))) return false;
   const points = [];
   let command = null;
+  let current = { x: 0, y: 0 };
   for (let i = 0; i < tokens.length;) {
-    if (/^[ML]$/.test(tokens[i])) { command = tokens[i++]; }
-    if (!command || i + 1 >= tokens.length) return false;
-    const x = number(tokens[i++]) + state.dx;
-    const y = number(tokens[i++]) + state.dy;
-    points.push({ x, y });
+    if (/^[MLHVZ]$/i.test(tokens[i])) command = tokens[i++].toUpperCase();
+    if (command === 'Z') { command = null; continue; }
+    if (!command) return false;
+    if (command === 'H') {
+      if (i >= tokens.length) return false;
+      current = { x: number(tokens[i++]), y: current.y };
+    } else if (command === 'V') {
+      if (i >= tokens.length) return false;
+      current = { x: current.x, y: number(tokens[i++]) };
+    } else {
+      if (i + 1 >= tokens.length) return false;
+      current = { x: number(tokens[i++]), y: number(tokens[i++]) };
+    }
+    points.push({ x: current.x + state.dx, y: current.y + state.dy });
   }
   for (let i = 1; i < points.length; i++) slide.addShape('line', lineOptions(points[i - 1], points[i], node.attrs));
   return true;
@@ -155,7 +208,7 @@ function addNode(slide, node, state, tempDir, imageIndex) {
     for (const child of node.children) addNode(slide, child, next, tempDir, imageIndex);
     return;
   }
-  const a = node.attrs;
+  const a = resolveAttrs(node, state.styles || {});
   if (node.name === 'rect') {
     const xy = transformXY(node, state);
     const fill = color(a.fill);
@@ -195,29 +248,42 @@ function addNode(slide, node, state, tempDir, imageIndex) {
   }
   if (node.name === 'text') {
     const xy = transformXY(node, state);
-    let txt = textContent(node);
-    if (!txt) return;
-    if (xy.x > 1700 && /^\d{2}$/.test(txt) && state.pageIndex) txt = String(state.pageIndex).padStart(2, '0');
-    if (txt === '在线系统与视频演示') xy.y += 180;
     const fsPx = number(a['font-size'], 32);
     const fsPt = fsPx * PT_PER_PX;
-    const widthPx = estimatedWidth(txt, fsPx);
     const anchor = a['text-anchor'] || 'start';
-    let left = xy.x;
-    if (anchor === 'middle') left -= widthPx / 2;
-    if (anchor === 'end') left -= widthPx;
-    const top = xy.y - fsPx * 0.84;
-    slide.addText(txt, {
-      x: left * PW / SW, y: top * PH / SH, w: widthPx * PW / SW, h: fsPx * 1.16 * PH / SH,
-      fontFace: 'Microsoft YaHei', fontSize: fsPt,
-      bold: number(a['font-weight']) >= 600 || a['font-weight'] === 'bold',
-      color: color(a.fill, '000000') || '000000',
-      margin: 0, breakLine: false, valign: 'mid',
-      align: anchor === 'middle' ? 'center' : anchor === 'end' ? 'right' : 'left',
-      charSpacing: 0,
-      fit: 'shrink',
-      transparency: Math.round((1 - number(a.opacity, 1)) * 100),
-    });
+    const tspans = node.children.filter((child) => typeof child !== 'string' && child.name === 'tspan');
+    const lines = [];
+    let lineY = xy.y;
+    if (tspans.length) {
+      for (const tspan of tspans) {
+        lineY += number(tspan.attrs.dy, 0);
+        lines.push({ text: textContent(tspan), x: number(tspan.attrs.x, xy.x), y: lineY });
+      }
+    } else {
+      lines.push({ text: textContent(node), x: xy.x, y: xy.y });
+    }
+    for (const line of lines) {
+      let txt = line.text;
+      if (!txt) continue;
+      if (line.x > 1700 && /^\d{2}$/.test(txt) && state.pageIndex) txt = String(state.pageIndex).padStart(2, '0');
+      if (txt === '在线系统与视频演示') line.y += 180;
+      const widthPx = estimatedWidth(txt, fsPx);
+      let left = line.x;
+      if (anchor === 'middle') left -= widthPx / 2;
+      if (anchor === 'end') left -= widthPx;
+      const top = line.y - fsPx * 0.84;
+      slide.addText(txt, {
+        x: left * PW / SW, y: top * PH / SH, w: widthPx * PW / SW, h: fsPx * 1.16 * PH / SH,
+        fontFace: (a['font-family'] || 'Microsoft YaHei').split(',')[0].replace(/["']/g, '').trim(), fontSize: fsPt,
+        bold: number(a['font-weight']) >= 600 || a['font-weight'] === 'bold',
+        color: color(a.fill, '000000') || '000000',
+        margin: 0, breakLine: false, valign: 'mid',
+        align: anchor === 'middle' ? 'center' : anchor === 'end' ? 'right' : 'left',
+        charSpacing: 0,
+        fit: 'shrink',
+        transparency: Math.round((1 - number(a.opacity, 1)) * 100),
+      });
+    }
     return;
   }
   if (node.name === 'image') {
@@ -227,6 +293,9 @@ function addNode(slide, node, state, tempDir, imageIndex) {
     const parsed = dataUri(source);
     if (parsed && parsed.mime.startsWith('image/')) {
       slide.addImage({ data: `data:${parsed.mime};base64,${parsed.data}`, x: xy.x * PW / SW, y: xy.y * PH / SH, w: w * PW / SW, h: h * PH / SH, transparency: Math.round((1 - number(a.opacity, 1)) * 100) });
+    } else if (source && !source.startsWith('#')) {
+      const file = path.resolve(state.svgDir || SVG_DIR, source);
+      if (fs.existsSync(file)) slide.addImage({ path: file, x: xy.x * PW / SW, y: xy.y * PH / SH, w: w * PW / SW, h: h * PH / SH, transparency: Math.round((1 - number(a.opacity, 1)) * 100) });
     }
     return;
   }
@@ -241,8 +310,9 @@ function addNode(slide, node, state, tempDir, imageIndex) {
 }
 
 async function main() {
-  for (const name of ORDER) if (!fs.existsSync(path.join(SVG_DIR, name))) throw new Error(`Missing ${name}`);
-  if (onlySlide !== null && (!Number.isInteger(onlySlide) || onlySlide < 1 || onlySlide > ORDER.length)) throw new Error(`Invalid slide number: ${slideFlag}`);
+  const activeOrder = ANT_WKG ? ANT_ORDER : ORDER;
+  for (const name of activeOrder) if (!fs.existsSync(path.join(SVG_DIR, name))) throw new Error(`Missing ${name}`);
+  if (onlySlide !== null && (!Number.isInteger(onlySlide) || onlySlide < 1 || onlySlide > activeOrder.length)) throw new Error(`Invalid slide number: ${slideFlag}`);
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.author = '孙烨';
@@ -253,14 +323,15 @@ async function main() {
   pptx.theme = { headFontFace: 'Microsoft YaHei', bodyFontFace: 'Microsoft YaHei', lang: 'zh-CN' };
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'national-award-editable-'));
   const imageIndex = { value: 0 };
-  const selected = onlySlide === null ? ORDER : [ORDER[onlySlide - 1]];
+  const selected = onlySlide === null ? activeOrder : [activeOrder[onlySlide - 1]];
   for (const [index, name] of selected.entries()) {
     const xml = fs.readFileSync(path.join(SVG_DIR, name), 'utf8');
     const root = parseXml(xml);
     const slide = pptx.addSlide();
     slide.background = { color: 'FFFFFF' };
     const pageIndex = onlySlide === null ? index + 1 : onlySlide;
-    for (const child of root.children) addNode(slide, child, { dx: 0, dy: 0, pageIndex }, tempDir, imageIndex);
+    const styles = collectStyles(root);
+    for (const child of root.children) addNode(slide, child, { dx: 0, dy: 0, pageIndex, styles, svgDir: SVG_DIR }, tempDir, imageIndex);
   }
   await pptx.writeFile({ fileName: OUT, compression: true });
   console.log(`${OUT}\nslides=${selected.length}`);
